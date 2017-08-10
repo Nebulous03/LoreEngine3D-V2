@@ -1,5 +1,20 @@
 #include "OBJLoader.h"
 
+struct Index
+{
+	short vi;
+	short ti;
+	short ni;
+
+	Index();
+	Index(short vertex, short texCoord, short normal);
+};
+
+Index::Index(short vertex, short texCoord, short normal) :
+	vi(vertex), ti(texCoord), ni(normal) {}
+
+Index::Index() : vi(0), ti(0), ni(0) {}
+
 Mesh* loadMesh(const char* path)
 {
 	std::vector<Vector3f> vertices;
@@ -103,15 +118,15 @@ Mesh* loadMesh(const char* path)
 		}
 	}
 
-	const unsigned int vertexSize = vertices.size() * 3;
-	const unsigned int texCoordSize = texCoords.size() * 2;
-	const unsigned int normalSize = normals.size() * 3;
-	const unsigned int indexSize = indices.size();
+	GLsizei vertexSize = vertices.size() * 3;
+	GLsizei texCoordSize = texCoords.size() * 2;
+	GLsizei normalSize = normals.size() * 3;
+	GLsizei indexSize = indices.size();
 
 	GLfloat* verticesArray = new GLfloat[vertexSize * 3];
 	GLfloat* texCoordsArray = new GLfloat[texCoordSize * 2];
 	GLfloat* normalsArray = new GLfloat[normalSize * 3];
-	GLushort* indicesArray = new GLushort[indexSize]; // Fix later
+	GLuint* indicesArray = new GLuint[indexSize]; // Fix later
 
 	unsigned int temp = 0;
 
@@ -147,12 +162,10 @@ Mesh* loadMesh(const char* path)
 		indicesArray[i] = indices[i].vi;
 	}
 
-	std::cout << " Mesh [" << path << "] loaded successfully." << std::endl;
+	std::cout << "Mesh [" << path << "] loaded successfully." << std::endl;
 
-	if(texCoordSize > 0)
-		return new Mesh(verticesArray, vertexSize, indicesArray, indexSize, 0, 0, texCoordsArray, texCoordSize);
-	else
-		return new Mesh(verticesArray, vertexSize, indicesArray, indexSize, 0, 0, verticesArray, vertexSize);
+	return new Mesh(verticesArray, vertexSize, indicesArray, indexSize, (GLfloat*)0, (GLsizei)0, (GLfloat*)0, (GLsizei)0, texCoordsArray, texCoordSize);
+
 }
 
 std::vector<std::string> split(std::string string, char delim)

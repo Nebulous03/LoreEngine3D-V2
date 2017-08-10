@@ -1,81 +1,55 @@
 #pragma once
 #include "../math/Math.h"
 
-#define CAMERA_ORTOGRAPHIC	0
-#define CAMERA_PERSPECTIVE	1
+#define CAMERA_DEFAULT_FOV  90.0f
+#define CAMERA_DEFAULT_NEAR 0.001f
+#define CAMERA_DEFAULT_FAR  1000.0f
 
-#define NEAR_PLANE	0.0001f
-#define FAR_PLANE	1000.0f
-
-#define DEFAULT_FOV		90.0f
-#define DEFAULT_PITCH	0.0f
-#define DEFAULT_YAW		0.0f
-#define DEFAULT_ROLL	0.0f
-
-enum CameraDirection {
-	FORWARD,
-	BACKWARD,
-	UP,
-	DOWN,
-	LEFT,
-	RIGHT
+enum Projection
+{
+	PROJECTION_ORTOGRAPHIC,
+	PROJECTION_PERSPECTIVE
 };
 
 class Camera
 {
-protected:
+private:
 
-	float _width;
-	float _height;
-	float _fov;
+	float near;
+	float far;
 
-	Vector3f _pos;
-	Vector3f _rot;
+	int width;
+	int height;
+	float fov;
 
-	Matrix4f _rotation;
-	Matrix4f _translation;
+	Projection projection;
 
-	Vector3f _forward;
-	Vector3f _right;
-	Vector3f _up;
+	Matrix4f translation;
+	Matrix4f rotation;
 
-	Matrix4f _projectionMatrix;
-	uint _projectionType;
-
-	void updateVectors();
+	Vector3f forward;
+	Vector3f right;
+	Vector3f up;
 
 public:
 
-	Camera(const Vector3f pos, const Vector3f rot, const uint projection, const float width, const float height, const float fov = DEFAULT_FOV);
+	Camera
+	(
+		const Vector3f& pos, const Vector3f& rot,
+		const Projection& projection, const int width, const int height, const float fov = CAMERA_DEFAULT_FOV,
+		const float near = CAMERA_DEFAULT_NEAR, const float far = CAMERA_DEFAULT_FAR
+	);
 
-	Camera& resize(const float width, const float height);
+	Matrix4f getProjection();
+	Matrix4f getView();
 
-	Camera& move(const Vector3f& direction, const float speed);
+	Camera& move(Vector3f direction, float speed);
+	Camera& rotate(Vector3f axis, float speed);
 
-	Camera& rotate(const Vector3f& rotation, const float speed);
-	Camera& rotateX(const float angle);
-	Camera& rotateY(const float angle);
-	Camera& rotateZ(const float angle);
+	Camera& setPosition(Vector3f pos);
+	Camera& setRotation(Vector3f rot);
 
-	const Vector3f& getPosition();
-	const Vector3f& getRotation();
-
-	Camera& setPosition(const Vector3f pos);
-	Camera& setRotation(const Vector3f rot);
-
-	float getFOV() const;
-	Camera& setFOV(const float fov);
-
-	const Matrix4f& getTranslationMatrix();
-	const Matrix4f& getRotationMatrix();
-
-	const Matrix4f& getProjection();
-	const Matrix4f getView();
-
-	const Vector3f getUp();
-	const Vector3f getForward();
-	const Vector3f getRight();
-
-	uint getProjectionType() const;
-
+	Vector3f getForward();
+	Vector3f getRight();
+	Vector3f getUp();
 };

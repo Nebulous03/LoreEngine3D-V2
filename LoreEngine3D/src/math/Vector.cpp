@@ -346,6 +346,11 @@ Vector3f operator*(Vector3f first, const Vector3f& second)
 	return first.mul(second);
 }
 
+Vector3f operator*(Vector3f first, const float& second)
+{
+	return first.mul(second);
+}
+
 Vector3f operator/(Vector3f first, const Vector3f& second)
 {
 	return first.div(second);

@@ -1,153 +1,71 @@
-#include "camera.h"
-#include "../logic/Input.h"
+#include "Camera.h"
 
-Camera::Camera(const Vector3f pos, const Vector3f rot, const uint projection, const float width, const float height, const float fov) :
-	_pos(pos), _rot(rot), _projectionType(projection), _width(width), _height(height), _fov(fov)
+Camera::Camera(const Vector3f& pos, const Vector3f& rot, const Projection& projection, const int width, const int height, const float fov, const float near, const float far)
+	:projection(projection), width(width), height(height), fov(fov), near(near), far(far)
 {
+	this->translation = Matrix4f::Translation(pos);
+	this->rotation = Matrix4f::Rotation(rot);
+	this->forward = Vector3f(0);
+	this->right = Vector3f(0);
+	this->up = Vector3f(0);
+}
 
+Matrix4f Camera::getProjection()
+{
 	switch (projection)
 	{
-	case CAMERA_ORTOGRAPHIC:
-		_projectionMatrix = Matrix4f::Orthographic(0, width, 0, height, -1.0f, 1.0f);
-		break;
-	case CAMERA_PERSPECTIVE:
-		_projectionMatrix = Matrix4f::Perspective(fov, width / height, NEAR_PLANE, FAR_PLANE);
-		break;
+	case PROJECTION_ORTOGRAPHIC:
+		return Matrix4f::Orthographic(0, (float)width, (float)height, 0, near, far);
+	case PROJECTION_PERSPECTIVE:
+		return Matrix4f::Perspective(fov, (float)width / (float)height, near, far);
 	default:
-		break;
+		return Matrix4f::Identity();
 	}
-
-	_rotation = Matrix4f::Rotation(rot);
-	_translation = Matrix4f::Translation(pos);
-
-	updateVectors();
 }
 
-Camera& Camera::resize(const float width, const float height)
+Matrix4f Camera::getView()
 {
-	_width = width;
-	_height = height;
-	switch (_projectionType)
-	{
-	case CAMERA_ORTOGRAPHIC:
-		_projectionMatrix = Matrix4f::Orthographic(0, width, 0, height, -1.0f, 1.0f);
-		break;
-	case CAMERA_PERSPECTIVE:
-		_projectionMatrix = Matrix4f::Perspective(_fov, width / height, NEAR_PLANE, FAR_PLANE);
-		break;
-	default:
-		break;
-	}
+	return Matrix4f::Identity().mul(rotation).mul(translation);
+}
+
+Camera& Camera::move(Vector3f direction, float speed)
+{
+	translation *= Matrix4f::Translation(direction * speed);
 	return *this;
 }
 
-Camera& Camera::move(const Vector3f& direction, const float speed)
+Camera& Camera::rotate(Vector3f axis, float speed)
 {
-	Vector3f temp = direction; temp.mul(speed);
-	_pos += temp;
-	_translation = Matrix4f::Translation(_pos);
+	rotation *= Matrix4f::Rotation(axis * speed);
 	return *this;
 }
 
-Camera& Camera::rotate(const Vector3f& axis, const float angle)
+Camera& Camera::setPosition(Vector3f pos)
 {
-	Vector3f temp = axis; temp.mul(angle);
-	_rot += temp;
-
-	if (_rot.x >= 360.0f) _rot.x -= 360.0f;
-	if (_rot.x <= -360.0f) _rot.x += 360.0f;
-
-	if (_rot.y >= 360.0f) _rot.y -= 360.0f;
-	if (_rot.y <= -360.0f) _rot.y += 360.0f;
-
-	if (_rot.z >= 360.0f) _rot.z -= 360.0f;
-	if (_rot.z <= -360.0f) _rot.z += 360.0f;
-
-	_rotation = Matrix4f::Rotation(_rot);
-	updateVectors();
+	translation = Matrix4f::Translation(pos);
 	return *this;
 }
 
-Camera& Camera::setPosition(const Vector3f pos)
+Camera& Camera::setRotation(Vector3f rot)
 {
-	_pos = pos;
-	_translation = Matrix4f::Translation(_pos);
+	rotation = Matrix4f::Rotation(rot);
 	return *this;
 }
 
-Camera& Camera::setRotation(const Vector3f rot)
+Vector3f Camera::getForward()
 {
-	_rot = rot;
-	_rotation = Matrix4f::Rotation(_rot);
-	return *this;
+	forward.x = rotation[2 + 0 * 4];
+	forward.y = rotation[2 + 1 * 4];
+	forward.z = rotation[2 + 2 * 4];
+	return forward;
 }
 
-const Vector3f& Camera::getPosition()
+Vector3f Camera::getRight()
 {
-	return _pos;
+	return Vector3f::cross(getForward(), vec3f(0, 1, 0)).normalize();
 }
 
-const Vector3f& Camera::getRotation()
+Vector3f Camera::getUp()
 {
-	return _rot;
-}
-
-float Camera::getFOV() const
-{
-	return _fov;
-}
-
-Camera& Camera::setFOV(const float fov)
-{
-	_fov = fov;
-	return *this;
-}
-
-const Matrix4f& Camera::getProjection()
-{
-	return _projectionMatrix;
-}
-
-const Matrix4f Camera::getView()
-{
-	return _rotation * _translation;
-}
-
-const Vector3f Camera::getUp()
-{
-	return _up;
-}
-
-const Vector3f Camera::getForward()
-{
-	return _forward;
-}
-
-const Vector3f Camera::getRight()
-{
-	return _right;
-}
-
-const Matrix4f& Camera::getTranslationMatrix()
-{
-	return _translation;
-}
-
-const Matrix4f& Camera::getRotationMatrix()
-{
-	return _rotation;
-}
-
-uint Camera::getProjectionType() const
-{
-	return _projectionType;
-}
-
-void Camera::updateVectors()
-{
-	_forward.x = _rotation[2 + 0 * 4];
-	_forward.y = _rotation[2 + 1 * 4];
-	_forward.z = _rotation[2 + 2 * 4];
-	_right = (Vector3f::cross(_forward, vec3f(0, 1, 0))).normalize();
-	_up = (Vector3f::cross(_right, _forward)).normalize();
+	return Vector3f::cross(getRight(), forward).normalize();
 }

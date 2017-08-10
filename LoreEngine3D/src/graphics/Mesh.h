@@ -1,53 +1,46 @@
 #pragma once
-#include "buffers\Buffers.h"
-
-struct Index
-{
-	short vi;
-	short ti;
-	short ni;
-
-	Index();
-	Index(short vertex, short texCoord, short normal);
-};
+#include <GL\glew.h>
+#include "buffers\GLBuffers.h"
+#include <vector>
 
 class Mesh
 {
-protected:
+private:
 
-	VertexArray* _vao;
+	GLfloat* vertices  = nullptr;
+	GLfloat* normals   = nullptr;
+	GLfloat* colors    = nullptr;
+	GLfloat* texCoords = nullptr;
+	GLuint * indices   = nullptr;
 
-	Buffer*	_vbo;
-	Buffer*	_ibo;
-	Buffer*	_cbo;
-	Buffer*	_tbo;
+	GLsizei vertexCount		= 0;
+	GLsizei normalCount		= 0;
+	GLsizei colorCount		= 0;
+	GLsizei texCoordCount	= 0;
+	GLsizei indexCount		= 0;
 
-	Mesh() = default;
+	VAO* vao;
+	IBO* ibo;
+
+	std::vector<VBO*> vbos;
 
 public:
 
 	Mesh
 	(
-		GLfloat* vertices, GLsizei vertexCount, 
-		GLushort* indices, GLsizei indicesCount, 
-		GLfloat* colors = nullptr, GLsizei colorCount = 0, 
-		GLfloat* texCoords = nullptr, GLsizei texCoordCount = 0
+		GLfloat* vertices, GLsizei vertexCount,
+		GLuint* indices, GLsizei indexCount,
+		GLfloat* normals, GLsizei normalCount,
+		GLfloat* colors, GLsizei colorCount,
+		GLfloat* texCoords, GLsizei texCoordCount
 	);
 
 	~Mesh();
 
-	VertexArray* getVAO() const;
-	Buffer* getVBO() const;
-	Buffer* getIBO() const;
-	Buffer* getCBO() const;
-	Buffer* getTBO() const;
+	VAO& getVAO();
+	VBO& getVBO(unsigned int id);
+	IBO& getIBO();
 
-	static Mesh Plane
-	(
-		GLfloat xSize, GLfloat ySize,
-		GLfloat* colors = nullptr, GLsizei colorCount = 0,
-		GLfloat* texCoords = nullptr, GLsizei texCoordCount = 0
-	);
-
+	static Mesh* Plane();
 
 };

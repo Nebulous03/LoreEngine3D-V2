@@ -1,19 +1,31 @@
 #pragma once
+#include "../math/Math.h"
 #include "Mesh.h"
-#include "Shader.h"
+#include <GL\glew.h>
+#include <vector>
 
 class Renderable
 {
 private:
 
-	Mesh& _mesh;
-	Matrix4f _transform;
+	Matrix4f translation;
+	Matrix4f rotation;
+	Matrix4f scale;
+
+	Mesh* mesh;
 
 public:
+	Renderable(Mesh* mesh, const Vector3f& pos, const Vector3f& rot, const Vector3f& scale);
+	~Renderable();
 
-	Renderable(Mesh& mesh, Matrix4f transform = Matrix4f::Translation(0,0,0));
-	
+	Matrix4f& getTranslation();
+	Matrix4f& getRotation();
+	Matrix4f& getScale();
+
+	Matrix4f getTransform();
+
 	Mesh& getMesh();
-	Matrix4f& getTransform();
 
+private:
+	void create();
 };

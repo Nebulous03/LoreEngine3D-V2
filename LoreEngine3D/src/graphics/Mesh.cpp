@@ -1,95 +1,99 @@
 #include "Mesh.h"
+#include "Renderer.h"
+#include <stdlib.h>
 #include <iostream>
 
-Index::Index(short vertex, short texCoord, short normal) :
-	vi(vertex), ti(texCoord), ni(normal) {}
+#define ELEMENT_SIZE 5
 
-Index::Index() : vi(0), ti(0), ni(0) {}
-
-Mesh::Mesh	// TODO: Allow texCoords w/o setting colors
+Mesh::Mesh
 (
 	GLfloat* vertices, GLsizei vertexCount,
-	GLushort* indices, GLsizei indicesCount,
+	GLuint* indices, GLsizei indexCount,
+	GLfloat* normals, GLsizei normalCount,
 	GLfloat* colors, GLsizei colorCount,
 	GLfloat* texCoords, GLsizei texCoordCount
-) 
+)
+	: vertices(vertices), vertexCount(vertexCount),
+	  indices(indices), indexCount(indexCount),
+	  normals(normals), normalCount(normalCount),
+	  colors(colors), colorCount(colorCount),
+	  texCoords(texCoords), texCoordCount(texCoordCount)
 {
-	_vao = new VertexArray();
-	_vbo = new Buffer(vertices, vertexCount, 3);
-	_ibo = new Buffer(indices, indicesCount);
 
-	_vao->attach(_vbo, 0);
+	vao = new VAO();
+	ibo = new IBO(indices, indexCount);
 
-	if (colors != nullptr)
-	{
-		_cbo = new Buffer(colors, colorCount, 4);
-		_vao->attach(_cbo, 1);
-		std::cout << "COLORS ENABLED" << std::endl;
+	unsigned int index = 0;
+
+	if (vertexCount > 0) {
+		vbos.push_back(new VBO(vertices, vertexCount));
+		vao->attach(SHADER_VERTEX_LOCATION, *vbos[index++], 3);
 	}
 
-	if (texCoords != nullptr)
-	{
-		_tbo = new Buffer(texCoords, texCoordCount, 3);
-		_vao->attach(_tbo, 2);
+	if (normalCount > 0) {
+		vbos.push_back(new VBO(normals, normalCount));
+		vao->attach(SHADER_NORMAL_LOCATION, *vbos[index++], 3);
 	}
 
+	if (colorCount > 0) {
+		vbos.push_back(new VBO(colors, colorCount));
+		vao->attach(SHADER_COLOR_LOCATION, *vbos[index++], 4);
+	}
+
+	if (texCoordCount > 0) {
+		vbos.push_back(new VBO(texCoords, texCoordCount));
+		vao->attach(SHADER_TEXCOORD_LOCATION, *vbos[index++], 2);
+	}
+
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR)
+		std::cout << "OpenGL error occured while generating mesh! : " << error << std::endl;
 }
 
 Mesh::~Mesh()
 {
-	delete _vao;
-	delete _vbo;
-	delete _ibo;
-	delete _cbo;
-	delete _tbo;
+	if (vertices  != nullptr) delete[] vertices;
+	if (normals   != nullptr) delete[] normals;
+	if (colors    != nullptr) delete[] colors;
+	if (texCoords != nullptr) delete[] texCoords;
+	if (indices   != nullptr) delete[] indices;
+
+	delete vao;
+	delete ibo;
+
+	for (VBO* vbo : vbos) delete vbo;
 }
 
-VertexArray* Mesh::getVAO() const
+VAO& Mesh::getVAO()
 {
-	return _vao;
+	return *vao;
 }
 
-Buffer* Mesh::getVBO() const
+VBO& Mesh::getVBO(unsigned int id)
 {
-	return _vbo;
+	return *vbos[id];
 }
 
-Buffer* Mesh::getIBO() const
+IBO& Mesh::getIBO()
 {
-	return _ibo;
+	return *ibo;
 }
 
-Buffer* Mesh::getCBO() const
+Mesh* Mesh::Plane()
 {
-	return _cbo;
-}
-
-Buffer* Mesh::getTBO() const
-{
-	return _tbo;
-}
-
-Mesh Mesh::Plane
-(
-	GLfloat xSize, GLfloat ySize,
-	GLfloat* colors, GLsizei colorCount,
-	GLfloat* texCoords, GLsizei texCoordCount
-)
-{
-
-	GLfloat vertices[] =
+	GLfloat* vertices = new GLfloat[12]
 	{
-		0,		0,		0,
-		0,		ySize,  0,
-		xSize,  ySize,  0,
-		xSize,  0,		0,
+		0,	0,	0,
+		0,	1,  0,
+		1,  1,  0,
+		1,  0,	0,
 	};
 
-	GLushort indices[] =
+	GLuint* indices = new GLuint[6]
 	{
 		0, 1, 2,
 		2, 3, 0
 	};
 
-	return Mesh(vertices, 12, indices, 6, colors, colorCount, texCoords, texCoordCount);
+	return new Mesh(vertices, 12, indices, 6, 0, 0, 0, 0, vertices, 12);
 }

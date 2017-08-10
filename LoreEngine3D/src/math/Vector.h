@@ -85,6 +85,7 @@ struct Vector3f {
 	friend Vector3f operator+(Vector3f first, const Vector3f& second);
 	friend Vector3f operator-(Vector3f first, const Vector3f& second);
 	friend Vector3f operator*(Vector3f first, const Vector3f& second);
+	friend Vector3f operator*(Vector3f first, const float& second);
 	friend Vector3f operator/(Vector3f first, const Vector3f& second);
 
 	Vector3f& operator+=(const Vector3f& other);

@@ -143,10 +143,10 @@ Matrix4f Matrix4f::Orthographic(
 	Matrix4f m;
 	m.elements[0 + 0 * 4] = 2.0f / (right - left);
 	m.elements[1 + 1 * 4] = 2.0f / (top - bottom);
-	m.elements[2 + 2 * 4] = 2.0f / (near - far);
-	m.elements[0 + 3 * 4] = (left + right) / (left - right);
-	m.elements[1 + 3 * 4] = (bottom + top) / (bottom - top);
-	m.elements[2 + 3 * 4] = (far + near) / (far - near);
+	m.elements[2 + 2 * 4] = -2.0f / (far - near);
+	m.elements[0 + 3 * 4] = -(left + right) / (left - right);
+	m.elements[1 + 3 * 4] = -(bottom + top) / (bottom - top);
+	m.elements[2 + 3 * 4] = -(far + near) / (far - near);
 	m.elements[3 + 3 * 4] = 1.0f;
 	return m;
 }
